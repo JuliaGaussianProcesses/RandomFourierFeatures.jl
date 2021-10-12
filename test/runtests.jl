@@ -1,6 +1,6 @@
-using PathwiseSampling
+using RandomFourierFeatures
 using Test
 
-@testset "PathwiseSampling.jl" begin
+@testset "RandomFourierFeatures.jl" begin
     # Write your tests here.
 end
