@@ -1,7 +1,7 @@
 # Creates the sampling function needed for ApproximateGPs.pathwise_sample
 function create_prior_sample_function(num_basis_features=100)
     function prior_sample_function(rng, prior, input_dims, num_samples)
-        ϕ = prior_basis(rng, prior.kernel, num_basis_features, input_dims)
+        ϕ = sample_basis(rng, prior.kernel, num_basis_features, input_dims)
         w = rand(rng, Normal(), (num_basis_features, num_samples))
         return ϕ, w
     end

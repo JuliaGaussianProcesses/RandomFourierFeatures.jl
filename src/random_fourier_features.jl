@@ -1,14 +1,14 @@
 # Everything necessary to create a RFF approximation to a prior GP with a stationary kernel
 # Currently ony supports SqExponentialKernel with variance and lengthscale
-struct PriorBasis
+struct RFFBasis
     inner_weights  # lengthscale
     outer_weights  # variance (scaled)
     ω  # Sampled frequencies
     τ  # Sampled phases
 end
 
-(ϕ::PriorBasis)(x) = ϕ([x])
-function (ϕ::PriorBasis)(x::AbstractVector)
+(ϕ::RFFBasis)(x) = ϕ([x])
+function (ϕ::RFFBasis)(x::AbstractVector)
     # size(x): (num_data, input_dims)
     # size(ϕ.ω): (1, num_features)
     x_rescaled = x / ϕ.inner_weights
@@ -16,16 +16,15 @@ function (ϕ::PriorBasis)(x::AbstractVector)
     return ϕ.outer_weights * cos.(ωt_x .+ ϕ.τ')
 end
 
-function prior_basis(rng, kernel, num_features=10, input_dims=1)
+function sample_basis(rng, kernel, num_features=10, input_dims=1)
     p_ω = spectral_distribution(kernel, input_dims)
     ω = rand(rng, p_ω, num_features)
     τ = rand(rng, Uniform(0, 2π), num_features)
     inner, outer = spectral_weights(kernel)
     outer_scaled = outer * √(2/num_features)
 
-    return PriorBasis(inner, outer_scaled, ω, τ)
+    return RFFBasis(inner, outer_scaled, ω, τ)
 end
-
 
 function spectral_distribution(::SqExponentialKernel, input_dims=1)
     return MvNormal(Diagonal(Fill(1., input_dims)))

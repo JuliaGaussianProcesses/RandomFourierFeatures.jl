@@ -1,14 +1,11 @@
 module RandomFourierFeatures
 
-using AbstractGPs
-using ApproximateGPs
-import AbstractGPs: ApproxPosteriorGP
+using KernelFunctions
 using Distributions
 using LinearAlgebra
 using FillArrays
-using PDMats
 
-export prior_basis, sample_prior_functions, sample_posterior_functions
+export sample_basis, create_prior_sample_function
 
 include("posterior_sampling.jl")
 include("random_fourier_features.jl")
