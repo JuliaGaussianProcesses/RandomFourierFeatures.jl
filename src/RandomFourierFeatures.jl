@@ -1,7 +1,7 @@
-module PathwiseSampling
+module RandomFourierFeatures
 
 using AbstractGPs
-using SparseGPs
+using ApproximateGPs
 import AbstractGPs: ApproxPosteriorGP
 using Distributions
 using LinearAlgebra

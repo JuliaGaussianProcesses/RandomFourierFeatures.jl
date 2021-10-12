@@ -1,16 +1,16 @@
-name = "PathwiseSampling"
+name = "RandomFourierFeatures"
 uuid = "46bd3b77-1c99-43cd-804b-1e14830792b5"
 authors = ["Ross Viljoen <ross@viljoen.co.uk> and contributors"]
 version = "0.1.0"
 
 [deps]
 AbstractGPs = "99985d1d-32ba-4be9-9821-2ec096f28918"
+ApproximateGPs = "298c2ebc-0411-48ad-af38-99e88101b606"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 GPLikelihoods = "6031954c-0455-49d7-b3b9-3e1c99afaf40"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PDMats = "90014a1f-27ba-587c-ab20-58faa44d9150"
-SparseGPs = "298c2ebc-0411-48ad-af38-99e88101b606"
 
 [compat]
 julia = "1.6"
