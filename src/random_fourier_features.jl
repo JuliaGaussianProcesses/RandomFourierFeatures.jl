@@ -8,12 +8,14 @@ struct RFFBasis{Tinner, Touter, Tω, Tτ, Tsample}
     sample_params::Tsample  # Function to resample ω & τ
 end
 
-function (ϕ::RFFBasis)(x)
-    # size(x): (input_dims,)
+function (ϕ::RFFBasis)(x::AbstractVector)
+    # length(x[1]) = input_dims
     # size(ϕ.ω): (input_dims, num_features)
-    x_rescaled = x / ϕ.inner_weights
-    ωt_x = ϕ.ω'x_rescaled  # size(ωt_x): (num_features,)
-    return ϕ.outer_weights * cos.(ωt_x .+ ϕ.τ)
+    x_rescaled = x ./ ϕ.inner_weights
+
+    ωt_x = map(s -> ϕ.ω * s, x_rescaled)  # length(ωt_x[1]) = num_features
+    cos_term = map(s -> cos.(s .+ ϕ.τ), ωt_x)
+    return ϕ.outer_weights * cos_term
 end
 
 function resample!(ϕ::RFFBasis)
@@ -30,8 +32,8 @@ function sample_basis(rng, kernel, input_dims, num_features=100)
     p_ω = spectral_distribution(kernel, input_dims)
 
     function sample_params()
-        ω = rand(rng, p_ω, num_features)
-        τ = rand(rng, Uniform(0, 2π), num_features)
+        ω = rand(rng, p_ω, num_features)'  # size(ω): (num_features, input_dims)
+        τ = rand(rng, Uniform(0, 2π), num_features)  # size(τ): (num_features,)
         return ω, τ
     end
 
