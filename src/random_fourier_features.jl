@@ -1,10 +1,10 @@
 # Everything necessary to create a RFF approximation to a prior GP with a stationary kernel
 # Currently ony supports SqExponentialKernel with variance and lengthscale
-struct RFFBasis
-    inner_weights  # lengthscale
-    outer_weights  # variance (scaled)
-    ω  # Sampled frequencies
-    τ  # Sampled phases
+struct RFFBasis{Tinner, Touter, Tω, Tτ}
+    inner_weights::Tinner  # lengthscale
+    outer_weights::Touter  # variance (scaled)
+    ω::Tω  # Sampled frequencies
+    τ::Tτ  # Sampled phases
 end
 
 (ϕ::RFFBasis)(x) = ϕ([x])
