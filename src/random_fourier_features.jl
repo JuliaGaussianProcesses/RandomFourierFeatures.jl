@@ -1,32 +1,44 @@
 # Everything necessary to create a RFF approximation to a prior GP with a stationary kernel
 # Currently ony supports SqExponentialKernel with variance and lengthscale
-struct RFFBasis{Tinner, Touter, Tω, Tτ}
+struct RFFBasis{Tinner, Touter, Tω, Tτ, Tsample}
     inner_weights::Tinner  # lengthscale
     outer_weights::Touter  # variance (scaled)
     ω::Tω  # Sampled frequencies
     τ::Tτ  # Sampled phases
+    sample_params::Tsample  # Function to resample ω & τ
 end
 
-(ϕ::RFFBasis)(x) = ϕ([x])
-function (ϕ::RFFBasis)(x::AbstractVector)
-    # size(x): (num_data, input_dims)
-    # size(ϕ.ω): (1, num_features)
+function (ϕ::RFFBasis)(x)
+    # size(x): (input_dims,)
+    # size(ϕ.ω): (input_dims, num_features)
     x_rescaled = x / ϕ.inner_weights
-    ωt_x = x_rescaled * ϕ.ω  # size(ωt_x): (num_data, num_features)
-    return ϕ.outer_weights * cos.(ωt_x .+ ϕ.τ')
+    ωt_x = ϕ.ω'x_rescaled  # size(ωt_x): (num_features,)
+    return ϕ.outer_weights * cos.(ωt_x .+ ϕ.τ)
 end
 
-function sample_basis(rng, kernel, num_features=10, input_dims=1)
-    p_ω = spectral_distribution(kernel, input_dims)
-    ω = rand(rng, p_ω, num_features)
-    τ = rand(rng, Uniform(0, 2π), num_features)
+function resample!(ϕ::RFFBasis)
+    ω, τ = ϕ.sample_params()
+    ϕ.ω .= ω
+    ϕ.τ .= τ
+end
+
+# Currently need to pass `input_dims` explicitly - will eventually be in KernelFunctions
+# https://github.com/JuliaGaussianProcesses/KernelFunctions.jl/issues/16
+function sample_basis(rng, kernel, input_dims, num_features=100)
     inner, outer = spectral_weights(kernel)
     outer_scaled = outer * √(2/num_features)
+    p_ω = spectral_distribution(kernel, input_dims)
 
-    return RFFBasis(inner, outer_scaled, ω, τ)
+    function sample_params()
+        ω = rand(rng, p_ω, num_features)
+        τ = rand(rng, Uniform(0, 2π), num_features)
+        return ω, τ
+    end
+
+    return RFFBasis(inner, outer_scaled, sample_params()..., sample_params)
 end
 
-function spectral_distribution(::SqExponentialKernel, input_dims=1)
+function spectral_distribution(::SqExponentialKernel, input_dims)
     return MvNormal(Diagonal(Fill(1., input_dims)))
 end
 
@@ -40,13 +52,13 @@ function spectral_weights(::SqExponentialKernel)
 end
 
 function spectral_weights(k::ScaledKernel)
-    σ² = k.σ²[1]
+    σ² = only(k.σ²)
     inner, outer = spectral_weights(k.kernel)
     return inner, outer * √σ²
 end
 
 function spectral_weights(k::TransformedKernel{<:Any, <:ScaleTransform})
-    s = k.transform.s[1]
+    s = only(k.transform.s)
     inner, outer = spectral_weights(k.kernel)
     return inner / s, outer
 end
