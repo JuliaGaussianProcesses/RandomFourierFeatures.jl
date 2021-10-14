@@ -5,9 +5,8 @@ using Distributions
 using LinearAlgebra
 using FillArrays
 
-export sample_basis, create_prior_sample_function
+export sample_basis, gp_rff_approx
 
-include("posterior_sampling.jl")
 include("random_fourier_features.jl")
 
 end

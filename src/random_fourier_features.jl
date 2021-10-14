@@ -1,21 +1,26 @@
-# Everything necessary to create a RFF approximation to a prior GP with a stationary kernel
+# The weight_space_approx function needed for ApproximateGPs.pathwise_sample
+# Returns both the sampled basis and the distribution over w needed to approximate the GP
+function gp_rff_approx(rng, kernel, input_dims, feature_dims)
+    ϕ = sample_basis(rng, kernel, input_dims, feature_dims)
+    p_w = MvNormal(Diagonal(Fill(1., feature_dims)))
+    return ϕ, p_w
+end
+
+# Everything necessary to create a RFF approximation to a stationary kernel
 # Currently ony supports SqExponentialKernel with variance and lengthscale
 struct RFFBasis{Tinner, Touter, Tω, Tτ, Tsample}
     inner_weights::Tinner  # lengthscale
     outer_weights::Touter  # variance (scaled)
-    ω::Tω  # Sampled frequencies
-    τ::Tτ  # Sampled phases
-    sample_params::Tsample  # Function to resample ω & τ
+    ω::Tω  # Sampled frequencies;               size(ω): (input_dims, num_features)
+    τ::Tτ  # Sampled phases;                    size(τ): (num_features,)
+    sample_params::Tsample  # Returns a new sample of ω & τ
 end
 
-function (ϕ::RFFBasis)(x::AbstractVector)
-    # length(x[1]) = input_dims
-    # size(ϕ.ω): (input_dims, num_features)
-    x_rescaled = x ./ ϕ.inner_weights
-
-    ωt_x = map(s -> ϕ.ω * s, x_rescaled)  # length(ωt_x[1]) = num_features
-    cos_term = map(s -> cos.(s .+ ϕ.τ), ωt_x)
-    return ϕ.outer_weights * cos_term
+function (ϕ::RFFBasis)(x)
+    # ϕ: R^{input_dims} -> R^{num_features}
+    x_ = x ./ ϕ.inner_weights
+    ωt_x = ϕ.ω'x_
+    return ϕ.outer_weights * cos.(ωt_x .+ ϕ.τ)
 end
 
 function resample!(ϕ::RFFBasis)
@@ -32,8 +37,8 @@ function sample_basis(rng, kernel, input_dims, num_features=100)
     p_ω = spectral_distribution(kernel, input_dims)
 
     function sample_params()
-        ω = rand(rng, p_ω, num_features)'  # size(ω): (num_features, input_dims)
-        τ = rand(rng, Uniform(0, 2π), num_features)  # size(τ): (num_features,)
+        ω = rand(rng, p_ω, num_features)  #
+        τ = rand(rng, Uniform(0, 2π), num_features)  #
         return ω, τ
     end
 
