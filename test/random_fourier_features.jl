@@ -1,5 +1,5 @@
 @testset "random_fourier_features" begin
-    rng = Random.MersenneTwister(1453)
+    rng = Random.MersenneTwister(54321)
 
     input_dims = 2
     x = rand(rng, 3, input_dims)
@@ -10,7 +10,7 @@
     y_rowvecs = RowVecs(y)
     y_colvecs = ColVecs(y')
 
-    num_feats = Int(1e8)
+    num_feats = Int(1e7)
 
     function test_kernel_approx(kernel, x, y, input_dims, num_feats)
         ϕ = sample_rff_basis(rng, kernel, input_dims, num_feats)
