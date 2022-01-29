@@ -33,6 +33,12 @@ function resample!(ϕ::RFFBasis)
     ϕ.τ .= τ
 end
 
+KernelFunctions.kernelmatrix(ϕ::RFFBasis, x::AbstractVector, y::AbstractVector) = ϕ(x)'ϕ(y)
+function KernelFunctions.kernelmatrix(ϕ::RFFBasis, x::AbstractVector)
+    ϕx = ϕ(x)
+    return ϕx'ϕx
+end
+
 # Currently need to pass `input_dims` explicitly - will eventually be in KernelFunctions
 # https://github.com/JuliaGaussianProcesses/KernelFunctions.jl/issues/16
 function sample_rff_basis(rng::Random.AbstractRNG, kernel, input_dims::Integer, num_features = 100::Integer)
