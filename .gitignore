@@ -1,1 +1,11 @@
-/Manifest.toml
+.DS_Store
+.idea
+*.log
+tmp/
+
+*.result
+*.json
+*.jld2
+*.cov
+*.info
+Manifest.toml
