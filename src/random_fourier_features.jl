@@ -30,12 +30,20 @@ colvecs_matrix(x::RowVecs) = x.X'
 function resample!(ϕ::RFFBasis)
     ω, τ = ϕ.sample_params()
     ϕ.ω .= ω
-    ϕ.τ .= τ
+    return ϕ.τ .= τ
+end
+
+KernelFunctions.kernelmatrix(ϕ::RFFBasis, x::AbstractVector, y::AbstractVector) = ϕ(x)'ϕ(y)
+function KernelFunctions.kernelmatrix(ϕ::RFFBasis, x::AbstractVector)
+    ϕx = ϕ(x)
+    return ϕx'ϕx
 end
 
 # Currently need to pass `input_dims` explicitly - will eventually be in KernelFunctions
 # https://github.com/JuliaGaussianProcesses/KernelFunctions.jl/issues/16
-function sample_rff_basis(rng::Random.AbstractRNG, kernel, input_dims::Integer, num_features = 100::Integer)
+function sample_rff_basis(
+    rng::Random.AbstractRNG, kernel, input_dims::Integer, num_features=100::Integer
+)
     inner, outer = spectral_weights(kernel)
     outer_scaled = outer * √(2 / num_features)
     p_ω = spectral_distribution(kernel, input_dims)
@@ -49,16 +57,22 @@ function sample_rff_basis(rng::Random.AbstractRNG, kernel, input_dims::Integer, 
     return RFFBasis(inner, outer_scaled, sample_params()..., sample_params)
 end
 
-sample_rff_basis(kernel, input_dims::Integer, num_features = 100::Integer) = sample_rff_basis(Random.GLOBAL_RNG, kernel, input_dims, num_features)
+function sample_rff_basis(kernel, input_dims::Integer, num_features=100::Integer)
+    return sample_rff_basis(Random.GLOBAL_RNG, kernel, input_dims, num_features)
+end
 
 function spectral_distribution(::SqExponentialKernel, input_dims)
     return MvNormal(Diagonal(Fill(1.0, input_dims)))
 end
 
 spectral_distribution(k::ScaledKernel, args...) = spectral_distribution(k.kernel, args...)
-spectral_distribution(k::TransformedKernel, args...) = spectral_distribution(k.kernel, args...)
+function spectral_distribution(k::TransformedKernel, args...)
+    return spectral_distribution(k.kernel, args...)
+end
 
-spectral_distribution(k::Kernel) = error("Spectral distribution not implemented for kernel:\n$k")
+function spectral_distribution(k::Kernel)
+    return error("Spectral distribution not implemented for kernel:\n$k")
+end
 
 function spectral_weights(::SqExponentialKernel)
     return 1.0, 1.0
