@@ -32,15 +32,14 @@ struct RFFBasis{Tinner,Touter,Tω,Tτ,Tsample}
 end
 
 # TODO: support general AbstractVector input for ϕ?
-function (ϕ::RFFBasis)(x::Union{ColVecs,RowVecs})
-    X_ = colvecs_matrix(x) ./ ϕ.inner_weights
+(ϕ::RFFBasis)(x::ColVecs) = ColVecs(_compute_mapping(ϕ, x.X))
+(ϕ::RFFBasis)(x::RowVecs) = RowVecs(_compute_mapping(ϕ, x.X')')
+
+function _compute_mapping(ϕ, X)
+    X_ = X ./ ϕ.inner_weights
     ωt_x = ϕ.ω'X_
     return ϕ.outer_weights * cos.(ωt_x .+ ϕ.τ)
 end
-
-# Get the underlying matrix in ColVecs order
-colvecs_matrix(x::ColVecs) = x.X
-colvecs_matrix(x::RowVecs) = x.X'
 
 function resample!(ϕ::RFFBasis)
     ω, τ = ϕ.sample_params()
@@ -48,9 +47,11 @@ function resample!(ϕ::RFFBasis)
     return ϕ.τ .= τ
 end
 
-KernelFunctions.kernelmatrix(ϕ::RFFBasis, x::AbstractVector, y::AbstractVector) = ϕ(x)'ϕ(y)
+function KernelFunctions.kernelmatrix(ϕ::RFFBasis, x::AbstractVector, y::AbstractVector)
+    return _colvecs_matrix(ϕ(x))' * _colvecs_matrix(ϕ(y))
+end
 function KernelFunctions.kernelmatrix(ϕ::RFFBasis, x::AbstractVector)
-    ϕx = ϕ(x)
+    ϕx = _colvecs_matrix(ϕ(x))
     return ϕx'ϕx
 end
 
@@ -112,3 +113,7 @@ spectral_weights(k::Kernel) = error("Spectral weights not implemented for kernel
 # ProductKernel
 # SumKernel
 # MaternKernel
+
+# Get the underlying matrix in ColVecs order
+_colvecs_matrix(x::ColVecs) = x.X
+_colvecs_matrix(x::RowVecs) = x.X'
