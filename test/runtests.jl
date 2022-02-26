@@ -2,6 +2,7 @@ using Test
 using Random
 using RandomFourierFeatures
 using KernelFunctions
+using AbstractGPs
 
 # Writing tests:
 # 1. The file structure of the test should match precisely the file structure of src.
