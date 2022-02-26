@@ -1,9 +1,24 @@
 # The weight_space_approx function needed for ApproximateGPs.pathwise_sample
-# Returns both the sampled basis and the distribution over w needed to approximate the GP
-function gp_rff_approx(rng, kernel, input_dims, num_features)
-    ϕ = sample_rff_basis(rng, kernel, input_dims, num_features)
-    p_w = MvNormal(Diagonal(Fill(1.0, num_features)))
-    return ϕ, p_w
+# Returns a
+@doc raw"""
+    build_rff_weight_space_approx(rng::AbstractRNG, input_dims::Integer, num_features::Integer)
+
+Builds a closure `rff_weight_space_approx(f::AbstractGP)` which takes an
+`AbstractGP` as input and constructs a Bayesian linear regression model which
+approximates `f`. `f` is assumed to be a zero mean prior GP with one of the
+kernels supported by this package.
+"""
+function build_rff_weight_space_approx(
+    rng::Random.AbstractRNG, input_dims::Integer, num_features::Integer
+)
+    function rff_weight_space_approx(f::AbstractGPs.AbstractGP)
+        f.mean isa AbstractGPs.ZeroMean ||
+            error("The GP to be approximated must have zero mean")
+        ϕ = sample_rff_basis(rng, f.kernel, input_dims, num_features)
+        blr = BayesianLinearRegressor(Zeros(num_features), Diagonal(Ones(num_features)))
+        return BasisFunctionRegressor(blr, ϕ)
+    end
+    return rff_weight_space_approx
 end
 
 # Everything necessary to create a RFF approximation to a stationary kernel
@@ -62,7 +77,7 @@ function sample_rff_basis(kernel, input_dims::Integer, num_features=100::Integer
 end
 
 function spectral_distribution(::SqExponentialKernel, input_dims)
-    return MvNormal(Diagonal(Fill(1.0, input_dims)))
+    return MvNormal(Diagonal(Ones(input_dims)))
 end
 
 spectral_distribution(k::ScaledKernel, args...) = spectral_distribution(k.kernel, args...)

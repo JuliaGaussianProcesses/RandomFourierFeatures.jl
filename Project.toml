@@ -1,9 +1,11 @@
 name = "RandomFourierFeatures"
 uuid = "46bd3b77-1c99-43cd-804b-1e14830792b5"
 authors = ["JuliaGaussianProcesses Team"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
+AbstractGPs = "99985d1d-32ba-4be9-9821-2ec096f28918"
+BayesianLinearRegressors = "f579363c-4606-5e5c-a623-c4549f609c4b"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 KernelFunctions = "ec8451be-7e33-11e9-00cf-bbf324bd1392"
@@ -14,4 +16,6 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Distributions = "0.25"
 FillArrays = "0.12"
 KernelFunctions = "0.10"
+AbstractGPs = "0.5"
+BayesianLinearRegressors= "0.3"
 julia = "1.6"
