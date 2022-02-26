@@ -38,7 +38,9 @@
         rng = Random.MersenneTwister(54321)
         k = 3 * (SqExponentialKernel() ∘ ScaleTransform(3.0))
         ϕ = sample_rff_basis(rng, k, input_dims, 10)
-        @test ϕ(x_colvecs) == ϕ(x_rowvecs)
+        @test ϕ(x_colvecs) isa ColVecs
+        @test ϕ(x_rowvecs) isa RowVecs
+        @test ϕ(x_colvecs).X == ϕ(x_rowvecs).X'
         @test kernelmatrix(ϕ, x_colvecs) == kernelmatrix(ϕ, x_rowvecs)
         @test kernelmatrix(ϕ, x_colvecs, y_colvecs) == kernelmatrix(ϕ, x_rowvecs, y_colvecs)
         @test kernelmatrix(ϕ, x_colvecs, y_colvecs) == kernelmatrix(ϕ, x_colvecs, y_rowvecs)
